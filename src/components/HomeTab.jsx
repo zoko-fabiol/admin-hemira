@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Home, Save, Plus, Trash2, Image as ImageIcon, Upload } from 'lucide-react';
+import { Home, Save, Plus, Trash2, Image as ImageIcon, Upload, Sparkles } from 'lucide-react';
 import { saveContent, uploadImageFile } from '../services/cmsService';
-import CardAppearancePicker from './CardAppearancePicker';
+import FirestoreImageUploader from './FirestoreImageUploader';
 
 export default function HomeTab({ contentFr, contentEn, showToast, onOpenThemeModal }) {
   const [activeLang, setActiveLang] = useState('fr');
@@ -287,24 +287,24 @@ export default function HomeTab({ contentFr, contentEn, showToast, onOpenThemeMo
               </button>
             </div>
 
-            {/* Sélecteur de Design (6 options) et Animation (6 options) pour TOUS les blocs de la section */}
-            <CardAppearancePicker
-              design={current.commitmentsDesign || 'default'}
-              animation={current.commitmentsAnimation || 'default'}
-              showMediaUploader={false}
-              onOpenThemeModal={onOpenThemeModal}
-              onUpdate={(field, val) => {
-                const map = {
-                  design: 'commitmentsDesign',
-                  animation: 'commitmentsAnimation'
-                };
-                const key = map[field] || field;
-                handleChange(key, val);
-                setHomeFr(prev => ({ ...prev, [key]: val }));
-                setHomeEn(prev => ({ ...prev, [key]: val }));
-              }}
-              label="Apparence & Animation de la section 'Nos Engagements' (appliqué à tous les blocs)"
-            />
+            {/* Bannière de séparation claire Contenu / Apparence */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              padding: '10px 14px',
+              background: 'rgba(240, 98, 77, 0.08)',
+              border: '1px solid rgba(240, 98, 77, 0.2)',
+              borderRadius: '10px',
+              marginBottom: '16px',
+              fontSize: '12.5px',
+              color: 'var(--admin-text-main)'
+            }}>
+              <Sparkles size={16} color="var(--admin-coral, #F0624D)" style={{ flexShrink: 0 }} />
+              <span>
+                <strong>Gestion ergonomique séparée :</strong> Les variantes de cartes, les couleurs et les animations de cette section sont pilotées en temps réel dans l'onglet <strong>Apparence</strong>.
+              </span>
+            </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '16px' }}>
               {(current.commitments || []).map((com, i) => {
@@ -336,71 +336,16 @@ export default function HomeTab({ contentFr, contentEn, showToast, onOpenThemeMo
                       />
                     </div>
 
-                    {/* Image pour cet engagement */}
-                    <div style={{
-                      padding: '12px 14px',
-                      background: '#FFFFFF',
-                      border: '1px solid var(--admin-border, #E2E8F0)',
-                      borderRadius: '10px'
-                    }}>
-                      <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--admin-text-main, #0F172A)', display: 'block', marginBottom: '8px' }}>
-                        Image de cet engagement {isWithImg ? '(★ Requis/Actif pour le design avec image sélectionné)' : '(Optionnelle)'}
-                      </label>
-                      <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-                        <div style={{
-                          width: '64px',
-                          height: '50px',
-                          borderRadius: '6px',
-                          background: '#F1F5F9',
-                          border: '1px solid #CBD5E1',
-                          overflow: 'hidden',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          flexShrink: 0
-                        }}>
-                          {com.media ? (
-                            <img src={com.media} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                          ) : (
-                            <ImageIcon size={20} color="#94A3B8" />
-                          )}
-                        </div>
-                        <div style={{ flex: 1, minWidth: '180px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                            <label 
-                              className="admin-btn admin-btn-outline" 
-                              style={{ cursor: 'pointer', fontSize: '12px', padding: '5px 10px' }}
-                            >
-                              <Upload size={13} />
-                              <span>{uploadingCommitmentIndex === i ? 'Téléversement...' : 'Importer une image'}</span>
-                              <input
-                                type="file"
-                                accept="image/*"
-                                style={{ display: 'none' }}
-                                onChange={(e) => handleCommitmentImageUpload(e, i)}
-                              />
-                            </label>
-                            {com.media && (
-                              <button
-                                type="button"
-                                className="admin-btn admin-btn-danger"
-                                style={{ fontSize: '12px', padding: '5px 8px' }}
-                                onClick={() => handleCommitmentMediaChange(i, '')}
-                              >
-                                <Trash2 size={13} /> Retirer
-                              </button>
-                            )}
-                          </div>
-                          <input
-                            type="text"
-                            placeholder="Ou collez l'URL d'une image..."
-                            className="form-input"
-                            style={{ fontSize: '12px', padding: '4px 8px' }}
-                            value={com.media || ''}
-                            onChange={(e) => handleCommitmentMediaChange(i, e.target.value)}
-                          />
-                        </div>
-                      </div>
+                    {/* Bloc puissant de téléversement d'image Firestore */}
+                    <div style={{ marginTop: '12px' }}>
+                      <FirestoreImageUploader 
+                        value={com.media || ''}
+                        folder="commitments"
+                        label={`Illustration de l'engagement #${i + 1}`}
+                        description="Illustration haute qualité. Optimisation WebP automatique et stockage Firestore."
+                        aspectRatio="16/9"
+                        onChange={(url) => handleCommitmentMediaChange(i, url)}
+                      />
                     </div>
                   </div>
                 );
